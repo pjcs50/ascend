@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* Logo wordmark — elegant script, matches the "ascend" mark */
+.font-logo {
+  font-family: 'Pinyon Script', cursive;
+  font-weight: 400;
+}
+
+/* Dark, subtle scrollbars everywhere (kills the default chunky white one) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2e2e2e transparent;
+}
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2e2e2e;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
