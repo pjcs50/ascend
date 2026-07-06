@@ -8,6 +8,8 @@ import {
   Sparkles,
   BookOpen,
   Target,
+  ListTodo,
+  Timer,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +23,8 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/forge', label: 'Forge', icon: Sparkles },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/goals', label: 'Goals', icon: Target },
+  { to: '/tasks', label: 'Tasks', icon: ListTodo },
+  { to: '/focus', label: 'Focus', icon: Timer },
 ]
 
 function useIsActive() {

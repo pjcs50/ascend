@@ -267,3 +267,45 @@ create policy "own rows" on public.goals
 drop policy if exists "own rows" on public.life_area_ratings;
 create policy "own rows" on public.life_area_ratings
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
+-- Phase 2 · Tasks (Todoist-style) + Focus (Pomodoro)
+-- ============================================================
+
+create table if not exists public.tasks (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  title        text not null,
+  notes        text,
+  done         boolean not null default false,
+  due_date     date,
+  priority     int not null default 0 check (priority between 0 and 3), -- 0 none .. 3 high
+  project      text,
+  sort_order   int not null default 0,
+  completed_at timestamptz,
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists public.focus_sessions (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  minutes     int not null,
+  label       text,
+  task_id     uuid references public.tasks (id) on delete set null,
+  started_at  timestamptz not null default now(),
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists idx_tasks_user          on public.tasks (user_id);
+create index if not exists idx_focus_sessions_user on public.focus_sessions (user_id);
+
+alter table public.tasks          enable row level security;
+alter table public.focus_sessions enable row level security;
+
+drop policy if exists "own rows" on public.tasks;
+create policy "own rows" on public.tasks
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.focus_sessions;
+create policy "own rows" on public.focus_sessions
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
