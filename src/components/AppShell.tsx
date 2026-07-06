@@ -7,6 +7,7 @@ import {
   NotebookPen,
   Sparkles,
   BookOpen,
+  Target,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -19,6 +20,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/journal', label: 'Journal', icon: NotebookPen },
   { to: '/forge', label: 'Forge', icon: Sparkles },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { to: '/goals', label: 'Goals', icon: Target },
 ]
 
 function useIsActive() {

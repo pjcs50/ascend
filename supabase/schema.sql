@@ -227,3 +227,43 @@ alter table public.kb_pages enable row level security;
 drop policy if exists "own rows" on public.kb_pages;
 create policy "own rows" on public.kb_pages
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
+-- Phase 2 · Goals & Vision — cascade + Wheel of Life
+-- ============================================================
+
+create table if not exists public.goals (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  level      text not null check (level in ('vision', 'yearly', 'quarterly', 'monthly', 'weekly')),
+  title      text not null,
+  notes      text,
+  parent_id  uuid references public.goals (id) on delete set null,
+  done       boolean not null default false,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.life_area_ratings (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  life_area_id uuid not null references public.life_areas (id) on delete cascade,
+  month        text not null, -- 'YYYY-MM'
+  rating       int check (rating between 1 and 10),
+  created_at   timestamptz not null default now(),
+  unique (life_area_id, month)
+);
+
+create index if not exists idx_goals_user            on public.goals (user_id);
+create index if not exists idx_life_area_ratings_month on public.life_area_ratings (month);
+
+alter table public.goals            enable row level security;
+alter table public.life_area_ratings enable row level security;
+
+drop policy if exists "own rows" on public.goals;
+create policy "own rows" on public.goals
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.life_area_ratings;
+create policy "own rows" on public.life_area_ratings
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());

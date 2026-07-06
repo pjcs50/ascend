@@ -7,6 +7,7 @@ import { useJournalStore } from './features/journal/journalStore'
 import { usePeopleStore } from './features/people/peopleStore'
 import { useForgeStore } from './features/forge/forgeStore'
 import { useKbStore } from './features/kb/kbStore'
+import { useGoalsStore } from './features/goals/goalsStore'
 import { Login } from './components/Login'
 import { AppShell } from './components/AppShell'
 import { SplashScreen } from './components/SplashScreen'
@@ -16,6 +17,7 @@ import { PeoplePage } from './features/people/PeoplePage'
 import { JournalPage } from './features/journal/JournalPage'
 import { ForgePage } from './features/forge/ForgePage'
 import { KbPageView } from './features/kb/KbPage'
+import { GoalsPage } from './features/goals/GoalsPage'
 
 function App() {
   const session = useAuthStore((s) => s.session)
@@ -26,6 +28,7 @@ function App() {
   const loadPeople = usePeopleStore((s) => s.load)
   const loadForge = useForgeStore((s) => s.load)
   const loadKb = useKbStore((s) => s.load)
+  const loadGoals = useGoalsStore((s) => s.load)
 
   useEffect(() => {
     // Load the persisted session, then keep the store in sync with auth changes.
@@ -46,8 +49,9 @@ function App() {
       loadPeople()
       loadForge()
       loadKb()
+      loadGoals()
     }
-  }, [userId, loadHabits, loadJournal, loadPeople, loadForge, loadKb])
+  }, [userId, loadHabits, loadJournal, loadPeople, loadForge, loadKb, loadGoals])
 
   let content
   if (loading) {
@@ -66,6 +70,7 @@ function App() {
           <Route path="journal" element={<JournalPage />} />
           <Route path="forge" element={<ForgePage />} />
           <Route path="knowledge" element={<KbPageView />} />
+          <Route path="goals" element={<GoalsPage />} />
         </Route>
       </Routes>
     )
