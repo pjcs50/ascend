@@ -5,6 +5,7 @@ import { useAuthStore } from './store/useAuthStore'
 import { useHabitsStore } from './features/habits/habitsStore'
 import { useJournalStore } from './features/journal/journalStore'
 import { usePeopleStore } from './features/people/peopleStore'
+import { useForgeStore } from './features/forge/forgeStore'
 import { Login } from './components/Login'
 import { AppShell } from './components/AppShell'
 import { SplashScreen } from './components/SplashScreen'
@@ -12,6 +13,7 @@ import { HabitsPage } from './features/habits/HabitsPage'
 import { CommandCenter } from './features/dashboard/CommandCenter'
 import { PeoplePage } from './features/people/PeoplePage'
 import { JournalPage } from './features/journal/JournalPage'
+import { ForgePage } from './features/forge/ForgePage'
 
 function App() {
   const session = useAuthStore((s) => s.session)
@@ -20,6 +22,7 @@ function App() {
   const loadHabits = useHabitsStore((s) => s.load)
   const loadJournal = useJournalStore((s) => s.load)
   const loadPeople = usePeopleStore((s) => s.load)
+  const loadForge = useForgeStore((s) => s.load)
 
   useEffect(() => {
     // Load the persisted session, then keep the store in sync with auth changes.
@@ -38,8 +41,9 @@ function App() {
       loadHabits()
       loadJournal()
       loadPeople()
+      loadForge()
     }
-  }, [userId, loadHabits, loadJournal, loadPeople])
+  }, [userId, loadHabits, loadJournal, loadPeople, loadForge])
 
   let content
   if (loading) {
@@ -56,6 +60,7 @@ function App() {
           <Route path="habits" element={<HabitsPage />} />
           <Route path="people" element={<PeoplePage />} />
           <Route path="journal" element={<JournalPage />} />
+          <Route path="forge" element={<ForgePage />} />
         </Route>
       </Routes>
     )

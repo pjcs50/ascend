@@ -160,3 +160,46 @@ create policy "own rows" on public.person_lessons
 drop policy if exists "own rows" on public.journal_entries;
 create policy "own rows" on public.journal_entries
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
+-- Phase 2 · The Forge — universal capture → triage → battle-plan
+-- ============================================================
+
+create table if not exists public.forge_items (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  raw_text            text not null,
+  status              text not null default 'new' check (status in ('new', 'triaged', 'in_progress', 'done', 'archived')),
+  ai_category         text,
+  ai_destination      text,
+  recommended_surface text,
+  rationale           text,
+  effort_estimate     text,
+  next_action         text,
+  triaged_at          timestamptz,
+  created_at          timestamptz not null default now()
+);
+
+create table if not exists public.forge_prompts (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  forge_item_id uuid not null references public.forge_items (id) on delete cascade,
+  step_order    int not null default 0,
+  surface       text,
+  prompt_text   text not null,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists idx_forge_items_user   on public.forge_items (user_id);
+create index if not exists idx_forge_prompts_item  on public.forge_prompts (forge_item_id);
+
+alter table public.forge_items   enable row level security;
+alter table public.forge_prompts enable row level security;
+
+drop policy if exists "own rows" on public.forge_items;
+create policy "own rows" on public.forge_items
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.forge_prompts;
+create policy "own rows" on public.forge_prompts
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
