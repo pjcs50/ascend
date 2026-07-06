@@ -31,6 +31,7 @@ export async function createHabit(input: HabitInput): Promise<Habit> {
       unit: input.unit ?? null,
       target: input.target ?? null,
       frequency: input.frequency ?? 'daily',
+      times_per_week: input.times_per_week ?? null,
       color: input.color ?? null,
       icon: input.icon ?? null,
     })

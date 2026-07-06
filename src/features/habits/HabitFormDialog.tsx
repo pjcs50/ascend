@@ -29,6 +29,9 @@ export function HabitFormDialog({ habit, onClose }: Props) {
   const [unit, setUnit] = useState(habit?.unit ?? '')
   const [target, setTarget] = useState(habit?.target != null ? String(habit.target) : '')
   const [frequency, setFrequency] = useState<Frequency>(habit?.frequency ?? 'daily')
+  const [timesPerWeek, setTimesPerWeek] = useState(
+    habit?.times_per_week != null ? String(habit.times_per_week) : '3',
+  )
   const [color, setColor] = useState(habit?.color ?? HABIT_COLORS[0])
   const [icon, setIcon] = useState(habit?.icon ?? '')
   const [busy, setBusy] = useState(false)
@@ -43,6 +46,7 @@ export function HabitFormDialog({ habit, onClose }: Props) {
       name: name.trim(),
       type,
       frequency,
+      times_per_week: frequency === 'x_per_week' ? Number(timesPerWeek) || 3 : null,
       color,
       icon: icon.trim() || null,
       unit: type === 'quantitative' ? unit.trim() || null : null,
@@ -157,9 +161,24 @@ export function HabitFormDialog({ habit, onClose }: Props) {
           >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
-            <option value="x_per_week">A few times a week</option>
+            <option value="x_per_week">X times per week</option>
           </select>
         </div>
+
+        {frequency === 'x_per_week' && (
+          <div className="space-y-1">
+            <label className="text-xs text-neutral-500">Times per week</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={7}
+              value={timesPerWeek}
+              onChange={(e) => setTimesPerWeek(e.target.value)}
+              className={field}
+            />
+          </div>
+        )}
 
         <div className="flex gap-4">
           <div className="space-y-1">

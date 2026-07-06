@@ -84,3 +84,92 @@ export function monthAverage(habit: Habit, logs: HabitLog[], month: MonthRef): n
   if (!vals.length) return null
   return vals.reduce((a, b) => a + b, 0) / vals.length
 }
+
+// ── Per-frequency (weekly cadence) — for weekly / x-per-week habits ──────────
+// These measure by WEEK instead of by day. A week is Monday-based.
+
+export function isWeekly(habit: Habit): boolean {
+  return habit.frequency === 'weekly' || habit.frequency === 'x_per_week'
+}
+
+// How many done-days a week-based habit needs to count that week as met.
+export function weeklyTarget(habit: Habit): number {
+  if (habit.frequency === 'x_per_week') return Math.max(1, habit.times_per_week ?? 3)
+  return 1 // weekly
+}
+
+export function weekStartStr(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  const dow = (dt.getDay() + 6) % 7 // 0 = Monday
+  dt.setDate(dt.getDate() - dow)
+  return localDateStr(dt)
+}
+
+function shiftWeek(weekStart: string, weeks: number): string {
+  const [y, m, d] = weekStart.split('-').map(Number)
+  return localDateStr(new Date(y, m - 1, d + weeks * 7))
+}
+
+// Count of done-days per week (weekStart → count) for one habit.
+function doneCountByWeek(habit: Habit, logs: HabitLog[]): Map<string, number> {
+  const byWeek = new Map<string, number>()
+  for (const l of logs) {
+    if (l.habit_id !== habit.id || !isDone(habit, l)) continue
+    const wk = weekStartStr(l.log_date)
+    byWeek.set(wk, (byWeek.get(wk) ?? 0) + 1)
+  }
+  return byWeek
+}
+
+// This week's progress toward the target (for the Today view).
+export function weekProgress(habit: Habit, logs: HabitLog[]): { count: number; target: number } {
+  const wk = weekStartStr(localDateStr())
+  return { count: doneCountByWeek(habit, logs).get(wk) ?? 0, target: weeklyTarget(habit) }
+}
+
+// Current streak in WEEKS. If this week isn't met yet, count from last week so an
+// incomplete current week doesn't prematurely zero the streak.
+export function currentStreakWeekly(habit: Habit, logs: HabitLog[]): number {
+  const target = weeklyTarget(habit)
+  const byWeek = doneCountByWeek(habit, logs)
+  const met = (wk: string) => (byWeek.get(wk) ?? 0) >= target
+  let cursor = weekStartStr(localDateStr())
+  if (!met(cursor)) cursor = shiftWeek(cursor, -1)
+  let streak = 0
+  while (met(cursor)) {
+    streak++
+    cursor = shiftWeek(cursor, -1)
+  }
+  return streak
+}
+
+// Longest run of consecutive met weeks over all history.
+export function longestStreakWeekly(habit: Habit, logs: HabitLog[]): number {
+  const target = weeklyTarget(habit)
+  const byWeek = doneCountByWeek(habit, logs)
+  const weeks = [...byWeek.keys()].filter((wk) => (byWeek.get(wk) ?? 0) >= target).sort()
+  let longest = 0
+  let run = 0
+  let prev: string | null = null
+  for (const wk of weeks) {
+    if (prev && shiftWeek(prev, 1) === wk) run++
+    else run = 1
+    if (run > longest) longest = run
+    prev = wk
+  }
+  return longest
+}
+
+// Completion % over the weeks that touch the elapsed days of the month.
+export function monthCompletionWeekly(habit: Habit, logs: HabitLog[], month: MonthRef): number {
+  const target = weeklyTarget(habit)
+  const elapsed = daysElapsedInMonth(month)
+  if (elapsed === 0) return 0
+  const byWeek = doneCountByWeek(habit, logs)
+  const weeks = new Set<string>()
+  for (let day = 1; day <= elapsed; day++) weeks.add(weekStartStr(monthDateStr(month, day)))
+  let met = 0
+  for (const wk of weeks) if ((byWeek.get(wk) ?? 0) >= target) met++
+  return weeks.size ? met / weeks.size : 0
+}

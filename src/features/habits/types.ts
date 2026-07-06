@@ -35,6 +35,7 @@ export interface HabitInput {
   unit?: string | null
   target?: number | null
   frequency?: Frequency
+  times_per_week?: number | null
   color?: string | null
   icon?: string | null
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useHabitsStore } from './habitsStore'
-import { isDone } from './metrics'
+import { isDone, isWeekly, weekProgress } from './metrics'
 import { todayStr } from '../../lib/date'
 import { PremiumCheckbox } from './PremiumCheckbox'
 import type { Habit, HabitLog } from './types'
@@ -24,13 +24,24 @@ export function TodayView() {
     <ul className="space-y-2">
       {habits.map((h) => {
         const log = logs.find((l) => l.habit_id === h.id && l.log_date === today)
-        return <HabitRow key={h.id} habit={h} log={log} date={today} />
+        const wp = isWeekly(h) ? weekProgress(h, logs) : null
+        return <HabitRow key={h.id} habit={h} log={log} date={today} weekProgress={wp} />
       })}
     </ul>
   )
 }
 
-function HabitRow({ habit, log, date }: { habit: Habit; log: HabitLog | undefined; date: string }) {
+function HabitRow({
+  habit,
+  log,
+  date,
+  weekProgress,
+}: {
+  habit: Habit
+  log: HabitLog | undefined
+  date: string
+  weekProgress: { count: number; target: number } | null
+}) {
   const done = isDone(habit, log)
   const color = habit.color ?? '#737373'
 
@@ -40,6 +51,17 @@ function HabitRow({ habit, log, date }: { habit: Habit; log: HabitLog | undefine
       <span className={`flex-1 text-sm ${done ? 'text-neutral-500 line-through' : 'text-neutral-100'}`}>
         {habit.name}
       </span>
+      {weekProgress && (
+        <span
+          className="rounded-full px-2 py-0.5 text-[11px]"
+          style={{
+            backgroundColor: weekProgress.count >= weekProgress.target ? `${color}33` : '#262626',
+            color: weekProgress.count >= weekProgress.target ? color : '#a3a3a3',
+          }}
+        >
+          {weekProgress.count}/{weekProgress.target} this wk
+        </span>
+      )}
       {habit.type === 'boolean' ? (
         <BooleanControl habit={habit} done={done} date={date} color={color} />
       ) : (

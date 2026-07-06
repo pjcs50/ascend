@@ -1,7 +1,17 @@
 import type { ReactNode } from 'react'
 import { motion } from 'motion/react'
 import { useHabitsStore } from './habitsStore'
-import { logsByDate, currentStreak, longestStreak, monthCompletion, monthAverage } from './metrics'
+import {
+  logsByDate,
+  currentStreak,
+  longestStreak,
+  monthCompletion,
+  monthAverage,
+  isWeekly,
+  currentStreakWeekly,
+  longestStreakWeekly,
+  monthCompletionWeekly,
+} from './metrics'
 import { monthLabel } from '../../lib/date'
 import { AnimatedNumber } from '../../components/AnimatedNumber'
 import type { Habit, HabitLog } from './types'
@@ -19,12 +29,14 @@ export function MetricsView({ onEditHabit }: { onEditHabit: (h: Habit) => void }
   const stats = habits.map((h) => {
     const habitLogs = logs.filter((l) => l.habit_id === h.id)
     const byDate = logsByDate(habitLogs)
+    const weekly = isWeekly(h)
     return {
       habit: h,
       logs: habitLogs,
-      completion: monthCompletion(h, byDate, month),
-      current: currentStreak(h, byDate),
-      longest: longestStreak(h, habitLogs),
+      weekly,
+      completion: weekly ? monthCompletionWeekly(h, habitLogs, month) : monthCompletion(h, byDate, month),
+      current: weekly ? currentStreakWeekly(h, habitLogs) : currentStreak(h, byDate),
+      longest: weekly ? longestStreakWeekly(h, habitLogs) : longestStreak(h, habitLogs),
       average: monthAverage(h, habitLogs, month),
     }
   })
@@ -79,6 +91,7 @@ function Highlight({
 
 function MetricCard({
   habit,
+  weekly,
   completion,
   current,
   longest,
@@ -86,6 +99,7 @@ function MetricCard({
   onEdit,
 }: {
   habit: Habit
+  weekly: boolean
   logs: HabitLog[]
   completion: number
   current: number
@@ -109,6 +123,11 @@ function MetricCard({
           {habit.icon ? `${habit.icon} ` : ''}
           {habit.name}
         </span>
+        {weekly && (
+          <span className="rounded-full bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-400">
+            {habit.frequency === 'x_per_week' ? `${habit.times_per_week ?? 3}×/wk` : 'weekly'}
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-3 gap-2">
         <Stat
@@ -116,14 +135,14 @@ function MetricCard({
           value={<AnimatedNumber value={completion * 100} format={(n) => `${Math.round(n)}%`} />}
         />
         <Stat
-          label="Streak"
+          label={weekly ? 'Streak (wks)' : 'Streak'}
           value={
             <>
               <AnimatedNumber value={current} />🔥
             </>
           }
         />
-        <Stat label="Longest" value={<AnimatedNumber value={longest} />} />
+        <Stat label={weekly ? 'Longest (wks)' : 'Longest'} value={<AnimatedNumber value={longest} />} />
       </div>
       {habit.type === 'quantitative' && (
         <div className="mt-2 border-t border-neutral-800 pt-2">
