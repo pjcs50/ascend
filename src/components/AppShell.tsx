@@ -1,6 +1,15 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { motion } from 'motion/react'
-import { LayoutGrid, CircleCheckBig, Users, NotebookPen, Sparkles, LogOut, type LucideIcon } from 'lucide-react'
+import {
+  LayoutGrid,
+  CircleCheckBig,
+  Users,
+  NotebookPen,
+  Sparkles,
+  BookOpen,
+  LogOut,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
@@ -9,6 +18,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/people', label: 'People', icon: Users },
   { to: '/journal', label: 'Journal', icon: NotebookPen },
   { to: '/forge', label: 'Forge', icon: Sparkles },
+  { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
 ]
 
 function useIsActive() {

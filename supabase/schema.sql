@@ -203,3 +203,27 @@ create policy "own rows" on public.forge_items
 drop policy if exists "own rows" on public.forge_prompts;
 create policy "own rows" on public.forge_prompts
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
+-- Phase 2 · Knowledge Base — Notion-style nested pages
+-- ============================================================
+
+create table if not exists public.kb_pages (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  parent_id  uuid references public.kb_pages (id) on delete cascade,
+  title      text not null default 'Untitled',
+  content    text,
+  tags       text[] not null default '{}',
+  icon       text,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_kb_pages_user   on public.kb_pages (user_id);
+create index if not exists idx_kb_pages_parent on public.kb_pages (parent_id);
+
+alter table public.kb_pages enable row level security;
+drop policy if exists "own rows" on public.kb_pages;
+create policy "own rows" on public.kb_pages
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
