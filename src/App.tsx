@@ -7,6 +7,7 @@ import { useJournalStore } from './features/journal/journalStore'
 import { usePeopleStore } from './features/people/peopleStore'
 import { Login } from './components/Login'
 import { AppShell } from './components/AppShell'
+import { SplashScreen } from './components/SplashScreen'
 import { HabitsPage } from './features/habits/HabitsPage'
 import { CommandCenter } from './features/dashboard/CommandCenter'
 import { PeoplePage } from './features/people/PeoplePage'
@@ -40,27 +41,31 @@ function App() {
     }
   }, [userId, loadHabits, loadJournal, loadPeople])
 
+  let content
   if (loading) {
-    return (
-      <main className="flex min-h-full items-center justify-center bg-neutral-950 text-neutral-500">
-        Loading…
-      </main>
+    content = (
+      <main className="flex min-h-full items-center justify-center bg-neutral-950 text-neutral-500" />
+    )
+  } else if (!session) {
+    content = <Login />
+  } else {
+    content = (
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route index element={<CommandCenter />} />
+          <Route path="habits" element={<HabitsPage />} />
+          <Route path="people" element={<PeoplePage />} />
+          <Route path="journal" element={<JournalPage />} />
+        </Route>
+      </Routes>
     )
   }
 
-  if (!session) {
-    return <Login />
-  }
-
   return (
-    <Routes>
-      <Route element={<AppShell />}>
-        <Route index element={<CommandCenter />} />
-        <Route path="habits" element={<HabitsPage />} />
-        <Route path="people" element={<PeoplePage />} />
-        <Route path="journal" element={<JournalPage />} />
-      </Route>
-    </Routes>
+    <>
+      <SplashScreen />
+      {content}
+    </>
   )
 }
 
