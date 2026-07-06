@@ -21,6 +21,16 @@ export function parseLocal(ds: string): Date {
   return new Date(y, m - 1, d)
 }
 
+// Advance a 'YYYY-MM-DD' date by one recurrence interval (local).
+export function advanceDate(dateStr: string, recurrence: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const base = new Date(y, m - 1, d)
+  if (recurrence === 'daily') base.setDate(base.getDate() + 1)
+  else if (recurrence === 'weekly') base.setDate(base.getDate() + 7)
+  else if (recurrence === 'monthly') base.setMonth(base.getMonth() + 1)
+  return localDateStr(base)
+}
+
 // A month is identified by year + zero-based month index (0 = January).
 export interface MonthRef {
   year: number

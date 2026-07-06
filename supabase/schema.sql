@@ -281,10 +281,13 @@ create table if not exists public.tasks (
   due_date     date,
   priority     int not null default 0 check (priority between 0 and 3), -- 0 none .. 3 high
   project      text,
+  recurrence   text, -- null | 'daily' | 'weekly' | 'monthly'
   sort_order   int not null default 0,
   completed_at timestamptz,
   created_at   timestamptz not null default now()
 );
+-- For existing databases:
+alter table public.tasks add column if not exists recurrence text;
 
 create table if not exists public.focus_sessions (
   id          uuid primary key default gen_random_uuid(),

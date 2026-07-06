@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import * as api from './api'
+import { advanceDate, todayStr } from '../../lib/date'
 import type { Task, TaskInput } from './types'
 
 interface TasksState {
@@ -41,6 +42,18 @@ export const useTasksStore = create<TasksState>((set) => ({
   toggle: async (id, done) => {
     const updated = await api.updateTask(id, { done, completed_at: done ? new Date().toISOString() : null })
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? updated : t)) }))
+    // Completing a recurring task spawns the next occurrence (Todoist-style).
+    if (done && updated.recurrence) {
+      const base = updated.due_date ?? todayStr()
+      const next = await api.createTask({
+        title: updated.title,
+        due_date: advanceDate(base, updated.recurrence),
+        priority: updated.priority,
+        project: updated.project,
+        recurrence: updated.recurrence,
+      })
+      set((s) => ({ tasks: [...s.tasks, next] }))
+    }
   },
   removeTask: async (id) => {
     await api.deleteTask(id)

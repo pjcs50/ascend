@@ -7,10 +7,18 @@ export interface Task {
   due_date: string | null
   priority: number // 0 none, 1 low, 2 med, 3 high
   project: string | null
+  recurrence: string | null // null | 'daily' | 'weekly' | 'monthly'
   sort_order: number
   completed_at: string | null
   created_at: string
 }
+
+export const RECURRENCE_OPTIONS = [
+  { value: '', label: "Doesn't repeat" },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+]
 
 export const PRIORITY = [
   { value: 0, label: 'None', color: '#525252' },
@@ -24,4 +32,5 @@ export interface TaskInput {
   due_date?: string | null
   priority?: number
   project?: string | null
+  recurrence?: string | null
 }

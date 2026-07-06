@@ -18,6 +18,7 @@ export async function createTask(input: TaskInput): Promise<Task> {
       due_date: input.due_date ?? null,
       priority: input.priority ?? 0,
       project: input.project ?? null,
+      recurrence: input.recurrence ?? null,
     })
     .select()
     .single()

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Flag } from 'lucide-react'
+import { Plus, X, Flag, Repeat } from 'lucide-react'
 import { useTasksStore } from './tasksStore'
-import { PRIORITY } from './types'
+import { PRIORITY, RECURRENCE_OPTIONS } from './types'
 import { todayStr, parseLocal } from '../../lib/date'
 import type { Task } from './types'
 
@@ -22,15 +22,17 @@ export function TasksPage() {
   const [title, setTitle] = useState('')
   const [due, setDue] = useState('')
   const [priority, setPriority] = useState(0)
+  const [recurrence, setRecurrence] = useState('')
   const [showDone, setShowDone] = useState(false)
 
   async function add() {
     const { title: t, project } = parseQuickAdd(title)
     if (!t) return
     setTitle('')
-    await addTask({ title: t, due_date: due || null, priority, project })
+    await addTask({ title: t, due_date: due || null, priority, project, recurrence: recurrence || null })
     setDue('')
     setPriority(0)
+    setRecurrence('')
   }
 
   const today = todayStr()
@@ -75,6 +77,17 @@ export function TasksPage() {
             {PRIORITY.map((p) => (
               <option key={p.value} value={p.value}>
                 {p.value === 0 ? 'No priority' : p.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={recurrence}
+            onChange={(e) => setRecurrence(e.target.value)}
+            className="rounded-lg bg-neutral-900/60 px-2 py-1 text-xs text-neutral-300 outline-none"
+          >
+            {RECURRENCE_OPTIONS.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
               </option>
             ))}
           </select>
@@ -156,6 +169,9 @@ function TaskRow({ task }: { task: Task }) {
         onBlur={() => title.trim() && title !== task.title && updateTask(task.id, { title: title.trim() })}
         className={`min-w-0 flex-1 bg-transparent text-sm outline-none ${task.done ? 'text-neutral-500 line-through' : 'text-neutral-200'}`}
       />
+      {task.recurrence && !task.done && (
+        <Repeat size={12} className="shrink-0 text-neutral-500" aria-label={`Repeats ${task.recurrence}`} />
+      )}
       {task.project && (
         <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-400">#{task.project}</span>
       )}
