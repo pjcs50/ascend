@@ -2,16 +2,9 @@ import { useState, useEffect } from 'react'
 import { Plus, X, Flag, Repeat } from 'lucide-react'
 import { useTasksStore } from './tasksStore'
 import { PRIORITY, RECURRENCE_OPTIONS } from './types'
+import { parseQuickAdd } from './parse'
 import { todayStr, parseLocal } from '../../lib/date'
 import type { Task } from './types'
-
-// Lightweight quick-add parsing: pull a #project token out of the title.
-function parseQuickAdd(raw: string): { title: string; project: string | null } {
-  const m = raw.match(/#(\S+)/)
-  const project = m ? m[1] : null
-  const title = raw.replace(/#\S+/, '').replace(/\s+/g, ' ').trim()
-  return { title, project }
-}
 
 export function TasksPage() {
   const tasks = useTasksStore((s) => s.tasks)
@@ -26,10 +19,17 @@ export function TasksPage() {
   const [showDone, setShowDone] = useState(false)
 
   async function add() {
-    const { title: t, project } = parseQuickAdd(title)
-    if (!t) return
+    const p = parseQuickAdd(title)
+    if (!p.title) return
     setTitle('')
-    await addTask({ title: t, due_date: due || null, priority, project, recurrence: recurrence || null })
+    // Natural-language values win; fall back to the manual selectors.
+    await addTask({
+      title: p.title,
+      project: p.project,
+      due_date: p.due_date ?? (due || null),
+      priority: p.priority ?? priority,
+      recurrence: recurrence || null,
+    })
     setDue('')
     setPriority(0)
     setRecurrence('')
@@ -50,7 +50,7 @@ export function TasksPage() {
     <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
       <div className="mb-5">
         <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
-        <p className="text-sm text-neutral-500">Add with #project. Due dates and priority optional.</p>
+        <p className="text-sm text-neutral-500">Type naturally — dates, !priority, and #project are parsed.</p>
       </div>
 
       {/* Quick add */}
@@ -59,7 +59,7 @@ export function TasksPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && add()}
-          placeholder="Add a task…  (try: Email Sam #work)"
+          placeholder="Add a task…  (try: Email Sam tomorrow !high #work)"
           className="w-full bg-transparent px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-600"
         />
         <div className="mt-2 flex items-center gap-2 px-1">
