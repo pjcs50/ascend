@@ -91,7 +91,7 @@ export function HabitsPage() {
 
       {loaded && (
         <>
-          {view === 'today' && <TodayView />}
+          {view === 'today' && <TodayView onEditHabit={openEdit} />}
           {view === 'month' && <MonthGridView onEditHabit={openEdit} />}
           {view === 'metrics' && <MetricsView onEditHabit={openEdit} />}
         </>

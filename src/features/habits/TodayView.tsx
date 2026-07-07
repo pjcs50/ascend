@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Pencil } from 'lucide-react'
 import { useHabitsStore } from './habitsStore'
 import { isDone, isWeekly, weekProgress } from './metrics'
 import { todayStr } from '../../lib/date'
@@ -7,7 +8,9 @@ import type { Habit, HabitLog } from './types'
 
 // Standalone, embeddable checklist of today's habits. The Command Center (step 4)
 // renders this directly, so it carries no page chrome of its own.
-export function TodayView() {
+// onEditHabit is optional: the Habits page passes it so rows are editable;
+// embeds (Command Center) can omit it to keep the list read-only.
+export function TodayView({ onEditHabit }: { onEditHabit?: (h: Habit) => void }) {
   const habits = useHabitsStore((s) => s.habits)
   const logs = useHabitsStore((s) => s.logs)
   const today = todayStr()
@@ -25,7 +28,16 @@ export function TodayView() {
       {habits.map((h) => {
         const log = logs.find((l) => l.habit_id === h.id && l.log_date === today)
         const wp = isWeekly(h) ? weekProgress(h, logs) : null
-        return <HabitRow key={h.id} habit={h} log={log} date={today} weekProgress={wp} />
+        return (
+          <HabitRow
+            key={h.id}
+            habit={h}
+            log={log}
+            date={today}
+            weekProgress={wp}
+            onEdit={onEditHabit ? () => onEditHabit(h) : undefined}
+          />
+        )
       })}
     </ul>
   )
@@ -36,21 +48,49 @@ function HabitRow({
   log,
   date,
   weekProgress,
+  onEdit,
 }: {
   habit: Habit
   log: HabitLog | undefined
   date: string
   weekProgress: { count: number; target: number } | null
+  onEdit?: () => void
 }) {
   const done = isDone(habit, log)
   const color = habit.color ?? '#737373'
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2.5">
+    <li className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2.5">
       <span className="w-5 text-center text-sm">{habit.icon || '•'}</span>
-      <span className={`flex-1 text-sm ${done ? 'text-neutral-500 line-through' : 'text-neutral-100'}`}>
-        {habit.name}
-      </span>
+      {onEdit ? (
+        <button
+          type="button"
+          onClick={onEdit}
+          title="Edit habit"
+          className={`flex-1 truncate text-left text-sm transition-colors hover:text-white ${
+            done ? 'text-neutral-500 line-through' : 'text-neutral-100'
+          }`}
+        >
+          {habit.name}
+        </button>
+      ) : (
+        <span
+          className={`flex-1 truncate text-sm ${done ? 'text-neutral-500 line-through' : 'text-neutral-100'}`}
+        >
+          {habit.name}
+        </span>
+      )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          title="Edit habit"
+          aria-label={`Edit ${habit.name}`}
+          className="rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+        >
+          <Pencil size={14} />
+        </button>
+      )}
       {weekProgress && (
         <span
           className="rounded-full px-2 py-0.5 text-[11px]"
