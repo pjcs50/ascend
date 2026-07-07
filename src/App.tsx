@@ -5,7 +5,6 @@ import { useAuthStore } from './store/useAuthStore'
 import { useHabitsStore } from './features/habits/habitsStore'
 import { useJournalStore } from './features/journal/journalStore'
 import { usePeopleStore } from './features/people/peopleStore'
-import { useForgeStore } from './features/forge/forgeStore'
 import { useKbStore } from './features/kb/kbStore'
 import { useGoalsStore } from './features/goals/goalsStore'
 import { useTasksStore } from './features/tasks/tasksStore'
@@ -17,7 +16,6 @@ import { HabitsPage } from './features/habits/HabitsPage'
 import { CommandCenter } from './features/dashboard/CommandCenter'
 import { PeoplePage } from './features/people/PeoplePage'
 import { JournalPage } from './features/journal/JournalPage'
-import { ForgePage } from './features/forge/ForgePage'
 import { KbPageView } from './features/kb/KbPage'
 import { GoalsPage } from './features/goals/GoalsPage'
 import { TasksPage } from './features/tasks/TasksPage'
@@ -30,7 +28,6 @@ function App() {
   const loadHabits = useHabitsStore((s) => s.load)
   const loadJournal = useJournalStore((s) => s.load)
   const loadPeople = usePeopleStore((s) => s.load)
-  const loadForge = useForgeStore((s) => s.load)
   const loadKb = useKbStore((s) => s.load)
   const loadGoals = useGoalsStore((s) => s.load)
   const loadTasks = useTasksStore((s) => s.load)
@@ -53,13 +50,12 @@ function App() {
       loadHabits()
       loadJournal()
       loadPeople()
-      loadForge()
       loadKb()
       loadGoals()
       loadTasks()
       loadFocus()
     }
-  }, [userId, loadHabits, loadJournal, loadPeople, loadForge, loadKb, loadGoals, loadTasks, loadFocus])
+  }, [userId, loadHabits, loadJournal, loadPeople, loadKb, loadGoals, loadTasks, loadFocus])
 
   let content
   if (loading) {
@@ -76,7 +72,6 @@ function App() {
           <Route path="habits" element={<HabitsPage />} />
           <Route path="people" element={<PeoplePage />} />
           <Route path="journal" element={<JournalPage />} />
-          <Route path="forge" element={<ForgePage />} />
           <Route path="knowledge" element={<KbPageView />} />
           <Route path="goals" element={<GoalsPage />} />
           <Route path="tasks" element={<TasksPage />} />

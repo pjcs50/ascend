@@ -1,11 +1,10 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import {
   LayoutGrid,
   CircleCheckBig,
   Users,
   NotebookPen,
-  Sparkles,
   BookOpen,
   Target,
   ListTodo,
@@ -20,12 +19,15 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/habits', label: 'Habits', icon: CircleCheckBig },
   { to: '/people', label: 'People', icon: Users },
   { to: '/journal', label: 'Journal', icon: NotebookPen },
-  { to: '/forge', label: 'Forge', icon: Sparkles },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/focus', label: 'Focus', icon: Timer },
 ]
+
+// A gentle, expensive-feeling easing curve (fast-out, slow-settle) reused for
+// page transitions. Same curve the premium component libraries lean on.
+const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
 function useIsActive() {
   const { pathname } = useLocation()
@@ -37,6 +39,7 @@ const spring = { type: 'spring', stiffness: 500, damping: 40 } as const
 export function AppShell() {
   const signOut = useAuthStore((s) => s.signOut)
   const isActive = useIsActive()
+  const { pathname } = useLocation()
 
   return (
     <div className="flex min-h-full bg-neutral-950 text-neutral-100">
@@ -85,9 +88,19 @@ export function AppShell() {
         </button>
       </aside>
 
-      {/* Main content */}
+      {/* Main content — each route fades/slides in for a smooth, expensive feel */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.26, ease: EASE_OUT }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Bottom bar (mobile) — frosted */}

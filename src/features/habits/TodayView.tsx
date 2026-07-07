@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Pencil } from 'lucide-react'
 import { useHabitsStore } from './habitsStore'
 import { isDone, isWeekly, weekProgress } from './metrics'
@@ -24,22 +25,25 @@ export function TodayView({ onEditHabit }: { onEditHabit?: (h: Habit) => void })
   }
 
   return (
-    <ul className="space-y-2">
-      {habits.map((h) => {
-        const log = logs.find((l) => l.habit_id === h.id && l.log_date === today)
-        const wp = isWeekly(h) ? weekProgress(h, logs) : null
-        return (
-          <HabitRow
-            key={h.id}
-            habit={h}
-            log={log}
-            date={today}
-            weekProgress={wp}
-            onEdit={onEditHabit ? () => onEditHabit(h) : undefined}
-          />
-        )
-      })}
-    </ul>
+    <motion.ul layout className="space-y-2">
+      <AnimatePresence initial={false}>
+        {habits.map((h, i) => {
+          const log = logs.find((l) => l.habit_id === h.id && l.log_date === today)
+          const wp = isWeekly(h) ? weekProgress(h, logs) : null
+          return (
+            <HabitRow
+              key={h.id}
+              habit={h}
+              log={log}
+              date={today}
+              index={i}
+              weekProgress={wp}
+              onEdit={onEditHabit ? () => onEditHabit(h) : undefined}
+            />
+          )
+        })}
+      </AnimatePresence>
+    </motion.ul>
   )
 }
 
@@ -47,12 +51,14 @@ function HabitRow({
   habit,
   log,
   date,
+  index,
   weekProgress,
   onEdit,
 }: {
   habit: Habit
   log: HabitLog | undefined
   date: string
+  index: number
   weekProgress: { count: number; target: number } | null
   onEdit?: () => void
 }) {
@@ -60,7 +66,13 @@ function HabitRow({
   const color = habit.color ?? '#737373'
 
   return (
-    <li className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2.5">
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ type: 'spring', stiffness: 520, damping: 40, mass: 0.7, delay: Math.min(index * 0.045, 0.3) }}
+      className="group flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2.5">
       <span className="w-5 text-center text-sm">{habit.icon || '•'}</span>
       {onEdit ? (
         <button
@@ -107,7 +119,7 @@ function HabitRow({
       ) : (
         <QuantControl habit={habit} log={log} date={date} done={done} color={color} />
       )}
-    </li>
+    </motion.li>
   )
 }
 
