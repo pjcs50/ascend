@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from 'react-router-dom'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import {
   LayoutGrid,
   CircleCheckBig,
@@ -88,19 +88,21 @@ export function AppShell() {
         </button>
       </aside>
 
-      {/* Main content — each route fades/slides in for a smooth, expensive feel */}
+      {/* Main content — each route fades/slides in for a smooth, expensive feel.
+          Keyed on the path so React remounts and replays the enter animation on
+          every navigation. Deliberately NO AnimatePresence/exit here: mode="wait"
+          under StrictMode can drop the exit-complete callback and leave the next
+          page stuck at opacity:0 (a black screen). A plain keyed remount always
+          settles at opacity:1, so it can never deadlock. */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.26, ease: EASE_OUT }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.26, ease: EASE_OUT }}
+        >
+          <Outlet />
+        </motion.div>
       </main>
 
       {/* Bottom bar (mobile) — frosted */}
