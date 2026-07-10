@@ -312,3 +312,33 @@ create policy "own rows" on public.tasks
 drop policy if exists "own rows" on public.focus_sessions;
 create policy "own rows" on public.focus_sessions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
+-- Creed — values, the person I'm becoming, lessons learned
+-- ============================================================
+-- One table, three kinds:
+--   north_star — a single identity statement (who I'm becoming)
+--   value      — a principle I stand for (title + what it means)
+--   lesson     — a lesson + the incident that taught it + a date
+create table if not exists public.creed_entries (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  kind       text not null check (kind in ('north_star', 'value', 'lesson')),
+  title      text not null default '',
+  body       text,
+  incident   text,        -- lessons: the incident that taught it
+  entry_date date,        -- lessons: when it happened / was learned
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_creed_entries_user on public.creed_entries (user_id);
+-- North Star is a singleton per user: a partial unique index makes a duplicate
+-- physically impossible even if two devices save at once.
+create unique index if not exists uniq_creed_north_star
+  on public.creed_entries (user_id) where kind = 'north_star';
+
+alter table public.creed_entries enable row level security;
+drop policy if exists "own rows" on public.creed_entries;
+create policy "own rows" on public.creed_entries
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());

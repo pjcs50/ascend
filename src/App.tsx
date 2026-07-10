@@ -9,6 +9,7 @@ import { useKbStore } from './features/kb/kbStore'
 import { useGoalsStore } from './features/goals/goalsStore'
 import { useTasksStore } from './features/tasks/tasksStore'
 import { useFocusStore } from './features/focus/focusStore'
+import { useCreedStore } from './features/creed/creedStore'
 import { Login } from './components/Login'
 import { AppShell } from './components/AppShell'
 import { SplashScreen } from './components/SplashScreen'
@@ -20,6 +21,7 @@ import { KbPageView } from './features/kb/KbPage'
 import { GoalsPage } from './features/goals/GoalsPage'
 import { TasksPage } from './features/tasks/TasksPage'
 import { FocusPage } from './features/focus/FocusPage'
+import { CreedPage } from './features/creed/CreedPage'
 
 function App() {
   const session = useAuthStore((s) => s.session)
@@ -32,6 +34,7 @@ function App() {
   const loadGoals = useGoalsStore((s) => s.load)
   const loadTasks = useTasksStore((s) => s.load)
   const loadFocus = useFocusStore((s) => s.load)
+  const loadCreed = useCreedStore((s) => s.load)
 
   useEffect(() => {
     // Load the persisted session, then keep the store in sync with auth changes.
@@ -54,8 +57,9 @@ function App() {
       loadGoals()
       loadTasks()
       loadFocus()
+      loadCreed()
     }
-  }, [userId, loadHabits, loadJournal, loadPeople, loadKb, loadGoals, loadTasks, loadFocus])
+  }, [userId, loadHabits, loadJournal, loadPeople, loadKb, loadGoals, loadTasks, loadFocus, loadCreed])
 
   let content
   if (loading) {
@@ -76,6 +80,7 @@ function App() {
           <Route path="goals" element={<GoalsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="focus" element={<FocusPage />} />
+          <Route path="creed" element={<CreedPage />} />
         </Route>
       </Routes>
     )

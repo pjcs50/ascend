@@ -9,6 +9,7 @@ import {
   Target,
   ListTodo,
   Timer,
+  Compass,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/goals', label: 'Goals', icon: Target },
   { to: '/tasks', label: 'Tasks', icon: ListTodo },
   { to: '/focus', label: 'Focus', icon: Timer },
+  { to: '/creed', label: 'Creed', icon: Compass },
 ]
 
 // A gentle, expensive-feeling easing curve (fast-out, slow-settle) reused for
