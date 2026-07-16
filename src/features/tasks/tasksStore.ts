@@ -58,6 +58,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
         const next = await api.createTask({
           title: updated.title,
           due_date: advanceDate(base, updated.recurrence),
+          due_time: updated.due_time, // "every day at 8pm" keeps its 8pm
           priority: updated.priority,
           project: updated.project,
           recurrence: updated.recurrence,

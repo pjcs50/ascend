@@ -20,6 +20,16 @@ function formatTime(t: string): string {
   return m === 0 ? `${h12}${mer}` : `${h12}:${pad2(m)}${mer}`
 }
 
+// 'YYYY-MM-DD' → 'Today' / 'Tomorrow' / 'Mon, Jul 20' for the live preview.
+function formatDateChip(ds: string): string {
+  const today = todayStr()
+  if (ds === today) return 'Today'
+  const t = parseLocal(today)
+  t.setDate(t.getDate() + 1)
+  if (parseLocal(ds).getTime() === t.getTime()) return 'Tomorrow'
+  return parseLocal(ds).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
 // Spring shared by list add / remove / reorder — snappy but soft on the settle.
 const listSpring = { type: 'spring', stiffness: 520, damping: 40, mass: 0.7 } as const
 
@@ -41,13 +51,14 @@ export function TasksPage() {
     if (!p.title) return
     setTitle('')
     // Natural-language values win; fall back to the manual selectors.
+    // "no date" beats even the manual date picker.
     await addTask({
       title: p.title,
       project: p.project,
-      due_date: p.due_date ?? (due || null),
+      due_date: p.no_date ? null : (p.due_date ?? (due || null)),
       due_time: p.due_time,
       priority: p.priority ?? priority,
-      recurrence: recurrence || null,
+      recurrence: p.recurrence ?? (recurrence || null),
     })
     setDue('')
     setPriority(0)
@@ -135,6 +146,7 @@ export function TasksPage() {
           placeholder="Add a task…  (try: Dentist appointment monday 8pm !high #health)"
           className="w-full bg-transparent px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-600"
         />
+        <QuickAddPreview title={title} />
         <div className="mt-2 flex items-center gap-2 px-1">
           <input
             type="date"
@@ -252,6 +264,46 @@ export function TasksPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// Live interpretation of what quick-add understood — Todoist-style. Parsing is
+// never silent: every recognized token shows as a chip before you hit Enter.
+function QuickAddPreview({ title }: { title: string }) {
+  const p = parseQuickAdd(title)
+  const chips: { key: string; label: string }[] = []
+  if (p.no_date) chips.push({ key: 'nodate', label: 'no date' })
+  else if (p.due_date) {
+    chips.push({
+      key: 'date',
+      label: formatDateChip(p.due_date) + (p.due_time ? ` · ${formatTime(p.due_time)}` : ''),
+    })
+  } else if (p.due_time) {
+    chips.push({ key: 'time', label: formatTime(p.due_time) })
+  }
+  if (p.recurrence) {
+    const rec = RECURRENCE_OPTIONS.find((r) => r.value === p.recurrence)
+    chips.push({ key: 'rec', label: `↻ ${rec?.label.toLowerCase() ?? p.recurrence}` })
+  }
+  if (p.priority != null) chips.push({ key: 'pri', label: `!${PRIORITY[p.priority].label.toLowerCase()}` })
+  if (p.project) chips.push({ key: 'proj', label: `#${p.project}` })
+  if (chips.length === 0) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -3 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-1.5 flex flex-wrap items-center gap-1.5 px-1"
+    >
+      {chips.map((c) => (
+        <span
+          key={c.key}
+          className="rounded-full border border-neutral-700/60 bg-neutral-800/70 px-2 py-0.5 text-[11px] text-neutral-300"
+        >
+          {c.label}
+        </span>
+      ))}
+    </motion.div>
   )
 }
 

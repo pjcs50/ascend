@@ -17,6 +17,7 @@ export interface Task {
 export const RECURRENCE_OPTIONS = [
   { value: '', label: "Doesn't repeat" },
   { value: 'daily', label: 'Daily' },
+  { value: 'weekdays', label: 'Weekdays (Mon–Fri)' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'monthly', label: 'Monthly' },
 ]

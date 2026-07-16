@@ -28,6 +28,11 @@ export function advanceDate(dateStr: string, recurrence: string): string {
   if (recurrence === 'daily') base.setDate(base.getDate() + 1)
   else if (recurrence === 'weekly') base.setDate(base.getDate() + 7)
   else if (recurrence === 'monthly') base.setMonth(base.getMonth() + 1)
+  else if (recurrence === 'weekdays') {
+    // Next Mon–Fri day: +1, then skip over the weekend.
+    base.setDate(base.getDate() + 1)
+    while (base.getDay() === 0 || base.getDay() === 6) base.setDate(base.getDate() + 1)
+  }
   return localDateStr(base)
 }
 
