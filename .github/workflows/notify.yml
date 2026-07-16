@@ -1,0 +1,19 @@
+# Ascend's notification scheduler. Vercel Hobby cron only runs once daily,
+# so GitHub Actions is the free every-5-minutes tick. The endpoint decides
+# what (if anything) to send; this just pokes it.
+name: notify
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # GH may add a few minutes of jitter — fine at a 30-min lead
+  workflow_dispatch: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poke /api/notify
+        run: |
+          curl -fsS -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://ascend-sigma-rosy.vercel.app/api/notify

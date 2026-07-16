@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { exportAllData } from '../lib/exportData'
+import { NotificationToggle } from '../features/notifications/NotificationToggle'
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Command', icon: LayoutGrid },
@@ -113,6 +114,7 @@ export function AppShell() {
           })}
         </nav>
         <div className="mt-4 space-y-0.5">
+          <NotificationToggle />
           <BackupButton />
           <button
             type="button"

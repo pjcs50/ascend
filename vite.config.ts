@@ -26,11 +26,13 @@ export default defineConfig({
           { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
-        // Precache the app shell so it installs and opens instantly. Supabase data
-        // still needs the network (offline data sync deferred per the spec).
+      // Custom SW (src/sw.ts): keeps the precache/navigation behavior of the
+      // old generateSW mode and adds Web Push handlers (push, notificationclick).
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: '/index.html',
       },
     }),
   ],

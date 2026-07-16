@@ -5,6 +5,7 @@ import { isDone, currentStreak, logsByDate } from '../habits/metrics'
 import { TodayView } from '../habits/TodayView'
 import { useJournalStore } from '../journal/journalStore'
 import { AnimatedNumber } from '../../components/AnimatedNumber'
+import { NotificationToggle } from '../notifications/NotificationToggle'
 import { todayStr } from '../../lib/date'
 
 function greeting(): string {
@@ -77,9 +78,15 @@ export function CommandCenter() {
       {/* subtle top glow — the one bit of "hero", kept light for a screen seen constantly */}
       <div className="pointer-events-none absolute inset-x-0 -top-10 h-40 bg-gradient-to-b from-neutral-800/25 to-transparent blur-2xl" />
 
-      <motion.header {...rise} transition={{ duration: 0.4 }} className="relative mb-6">
-        <p className="text-sm text-neutral-500">{dateLabel}</p>
-        <h1 className="text-2xl font-bold tracking-tight">{greeting()}.</h1>
+      <motion.header {...rise} transition={{ duration: 0.4 }} className="relative mb-6 flex items-start justify-between">
+        <div>
+          <p className="text-sm text-neutral-500">{dateLabel}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{greeting()}.</h1>
+        </div>
+        {/* Mobile-only: the sidebar (with the full toggle) is hidden below md. */}
+        <div className="md:hidden">
+          <NotificationToggle compact />
+        </div>
       </motion.header>
 
       {/* At-a-glance strip */}
