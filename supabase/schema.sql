@@ -316,6 +316,46 @@ create policy "own rows" on public.focus_sessions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- ============================================================
+-- Notifications — Web Push subscriptions + send dedupe
+-- ============================================================
+
+-- Reminder dedupe: set once the 30-min-before push for a task has been sent.
+alter table public.tasks add column if not exists reminded_at timestamptz;
+
+-- One row per subscribed device (Pixel, Mac, iPad).
+create table if not exists public.push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  endpoint   text not null unique,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Dedupe for scheduled sends (digest/nudge/streak): one row per kind per day.
+create table if not exists public.notification_log (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  kind       text not null,
+  dedupe_key text not null unique, -- e.g. 'digest-2026-07-17'
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_push_subscriptions_user on public.push_subscriptions (user_id);
+create index if not exists idx_notification_log_user   on public.notification_log (user_id);
+
+alter table public.push_subscriptions enable row level security;
+alter table public.notification_log   enable row level security;
+
+drop policy if exists "own rows" on public.push_subscriptions;
+create policy "own rows" on public.push_subscriptions
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.notification_log;
+create policy "own rows" on public.notification_log
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============================================================
 -- Creed — values, the person I'm becoming, lessons learned
 -- ============================================================
 -- One table, three kinds:

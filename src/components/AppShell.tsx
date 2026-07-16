@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { motion } from 'motion/react'
 import {
@@ -11,9 +12,12 @@ import {
   Timer,
   Compass,
   LogOut,
+  DownloadCloud,
+  Check,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
+import { exportAllData } from '../lib/exportData'
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Command', icon: LayoutGrid },
@@ -30,6 +34,34 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
 // A gentle, expensive-feeling easing curve (fast-out, slow-settle) reused for
 // page transitions. Same curve the premium component libraries lean on.
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
+
+// One-click full backup: every table → a timestamped JSON download.
+function BackupButton() {
+  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
+
+  async function run() {
+    if (state === 'busy') return
+    setState('busy')
+    try {
+      await exportAllData()
+      setState('done')
+    } catch {
+      setState('error')
+    }
+    setTimeout(() => setState('idle'), 2500)
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={run}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-neutral-300"
+    >
+      {state === 'done' ? <Check size={16} className="text-green-400" /> : <DownloadCloud size={16} />}
+      {state === 'busy' ? 'Backing up…' : state === 'done' ? 'Saved' : state === 'error' ? 'Failed — retry' : 'Backup'}
+    </button>
+  )
+}
 
 function useIsActive() {
   const { pathname } = useLocation()
@@ -80,14 +112,17 @@ export function AppShell() {
             )
           })}
         </nav>
-        <button
-          type="button"
-          onClick={() => signOut()}
-          className="mt-4 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-neutral-300"
-        >
-          <LogOut size={16} />
-          Sign out
-        </button>
+        <div className="mt-4 space-y-0.5">
+          <BackupButton />
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-neutral-300"
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {/* Main content — each route fades/slides in for a smooth, expensive feel.
