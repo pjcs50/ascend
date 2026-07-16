@@ -279,6 +279,7 @@ create table if not exists public.tasks (
   notes        text,
   done         boolean not null default false,
   due_date     date,
+  due_time     time, -- optional clock time from NL quick-add ("8pm")
   priority     int not null default 0 check (priority between 0 and 3), -- 0 none .. 3 high
   project      text,
   recurrence   text, -- null | 'daily' | 'weekly' | 'monthly'
@@ -288,6 +289,7 @@ create table if not exists public.tasks (
 );
 -- For existing databases:
 alter table public.tasks add column if not exists recurrence text;
+alter table public.tasks add column if not exists due_time time; -- NL quick-add times ("8pm")
 
 create table if not exists public.focus_sessions (
   id          uuid primary key default gen_random_uuid(),

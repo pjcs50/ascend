@@ -5,6 +5,7 @@ export interface Task {
   notes: string | null
   done: boolean
   due_date: string | null
+  due_time: string | null // 'HH:MM:SS' from Postgres, or null (all-day)
   priority: number // 0 none, 1 low, 2 med, 3 high
   project: string | null
   recurrence: string | null // null | 'daily' | 'weekly' | 'monthly'
@@ -30,6 +31,7 @@ export const PRIORITY = [
 export interface TaskInput {
   title: string
   due_date?: string | null
+  due_time?: string | null // 'HH:MM'
   priority?: number
   project?: string | null
   recurrence?: string | null

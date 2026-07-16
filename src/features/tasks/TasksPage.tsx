@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Plus, X, Flag, Repeat, Copy, Check } from 'lucide-react'
+import { Plus, X, Flag, Repeat, Copy, Check, Clock } from 'lucide-react'
 import { useTasksStore } from './tasksStore'
 import { PRIORITY, RECURRENCE_OPTIONS } from './types'
 import { parseQuickAdd } from './parse'
 import { todayStr, parseLocal } from '../../lib/date'
+import { celebrateAt } from '../../lib/confetti'
 import type { Task } from './types'
+
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+// 'HH:MM[:SS]' → '8pm' / '8:30pm' for chips and the text export.
+function formatTime(t: string): string {
+  const [hStr, mStr] = t.split(':')
+  const h = Number(hStr)
+  const m = Number(mStr)
+  const mer = h >= 12 ? 'pm' : 'am'
+  const h12 = h % 12 || 12
+  return m === 0 ? `${h12}${mer}` : `${h12}:${pad2(m)}${mer}`
+}
 
 // Spring shared by list add / remove / reorder — snappy but soft on the settle.
 const listSpring = { type: 'spring', stiffness: 520, damping: 40, mass: 0.7 } as const
@@ -32,6 +45,7 @@ export function TasksPage() {
       title: p.title,
       project: p.project,
       due_date: p.due_date ?? (due || null),
+      due_time: p.due_time,
       priority: p.priority ?? priority,
       recurrence: recurrence || null,
     })
@@ -48,7 +62,13 @@ export function TasksPage() {
     { key: 'upcoming', label: 'Upcoming', items: active.filter((t) => t.due_date && t.due_date > today) },
     { key: 'someday', label: 'No date', items: active.filter((t) => !t.due_date) },
   ]
-  const sortItems = (items: Task[]) => [...items].sort((a, b) => b.priority - a.priority)
+  // Priority first, then timed tasks in clock order, untimed last.
+  const sortItems = (items: Task[]) =>
+    [...items].sort(
+      (a, b) =>
+        b.priority - a.priority ||
+        (a.due_time ?? '99').localeCompare(b.due_time ?? '99'),
+    )
   const done = tasks.filter((t) => t.done)
 
   async function copyAll() {
@@ -112,7 +132,7 @@ export function TasksPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && add()}
-          placeholder="Add a task…  (try: Email Sam tomorrow !high #work)"
+          placeholder="Add a task…  (try: Dentist appointment monday 8pm !high #health)"
           className="w-full bg-transparent px-2 py-1 text-sm text-neutral-100 outline-none placeholder:text-neutral-600"
         />
         <div className="mt-2 flex items-center gap-2 px-1">
@@ -192,8 +212,8 @@ export function TasksPage() {
                   </div>
                   <motion.div layout className="space-y-1">
                     <AnimatePresence mode="popLayout" initial={false}>
-                      {sortItems(b.items).map((t, i) => (
-                        <TaskRow key={t.id} task={t} index={i} />
+                      {sortItems(b.items).map((t) => (
+                        <TaskRow key={t.id} task={t} />
                       ))}
                     </AnimatePresence>
                   </motion.div>
@@ -222,8 +242,8 @@ export function TasksPage() {
                 className="overflow-hidden"
               >
                 <div className="mt-2 space-y-1">
-                  {done.map((t, i) => (
-                    <TaskRow key={t.id} task={t} index={i} />
+                  {done.map((t) => (
+                    <TaskRow key={t.id} task={t} />
                   ))}
                 </div>
               </motion.div>
@@ -250,7 +270,7 @@ function buildTasksExport(
     for (const t of sorted) {
       const tags: string[] = []
       if (t.priority > 0) tags.push(PRIORITY[t.priority].label)
-      if (t.due_date) tags.push(`due ${t.due_date}`)
+      if (t.due_date) tags.push(`due ${t.due_date}${t.due_time ? ` ${formatTime(t.due_time)}` : ''}`)
       if (t.project) tags.push(`#${t.project}`)
       if (t.recurrence) tags.push(`repeats ${t.recurrence}`)
       const suffix = tags.length ? `  (${tags.join(', ')})` : ''
@@ -261,7 +281,7 @@ function buildTasksExport(
   return any ? lines.join('\n').trim() : ''
 }
 
-function TaskRow({ task, index }: { task: Task; index: number }) {
+function TaskRow({ task }: { task: Task }) {
   const toggle = useTasksStore((s) => s.toggle)
   const updateTask = useTasksStore((s) => s.updateTask)
   const removeTask = useTasksStore((s) => s.removeTask)
@@ -269,36 +289,57 @@ function TaskRow({ task, index }: { task: Task; index: number }) {
   useEffect(() => setTitle(task.title), [task.title])
   const pr = PRIORITY[task.priority]
 
+  function handleToggle(e: React.MouseEvent<HTMLButtonElement>) {
+    // Confetti fires from the tap point the instant you complete — the store
+    // update is optimistic, so the tick + burst + row exit all start together.
+    if (!task.done) celebrateAt(e.currentTarget)
+    toggle(task.id, !task.done)
+  }
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: -6, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94 }}
-      transition={{ ...listSpring, delay: Math.min(index * 0.035, 0.28) }}
-      className="group flex items-center gap-2.5 rounded-lg px-1 py-1 hover:bg-neutral-900/50"
+      // The completion "pop": swell briefly, then shrink away as siblings reflow.
+      exit={{
+        scale: [1, 1.04, 0.9],
+        opacity: [1, 1, 0],
+        transition: { duration: 0.32, times: [0, 0.4, 1], ease: 'easeInOut' },
+      }}
+      transition={listSpring}
+      className="group flex items-center gap-1.5 rounded-lg px-1 py-0.5 hover:bg-neutral-900/50"
     >
+      {/* 40px hit area (mobile-friendly) around an 18px visual circle. */}
       <motion.button
         type="button"
-        onClick={() => toggle(task.id, !task.done)}
-        whileTap={{ scale: 0.8 }}
+        onClick={handleToggle}
+        whileTap={{ scale: 0.82 }}
         transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors"
-        style={{ borderColor: task.done ? '#22c55e' : pr.color, backgroundColor: task.done ? '#22c55e' : 'transparent' }}
+        aria-label={task.done ? 'Mark not done' : 'Mark done'}
+        className="flex h-10 w-10 shrink-0 items-center justify-center"
       >
-        <AnimatePresence>
-          {task.done && (
-            <motion.span
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 600, damping: 22 }}
-              className="text-[9px] text-neutral-950"
-            >
-              ✓
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <span
+          className="flex h-[18px] w-[18px] items-center justify-center rounded-full border transition-colors"
+          style={{
+            borderColor: task.done ? '#22c55e' : pr.color,
+            backgroundColor: task.done ? '#22c55e' : 'transparent',
+          }}
+        >
+          <AnimatePresence>
+            {task.done && (
+              <motion.span
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 600, damping: 22 }}
+                className="text-[10px] text-neutral-950"
+              >
+                ✓
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </span>
       </motion.button>
       {task.priority > 0 && !task.done && <Flag size={12} className="shrink-0" style={{ color: pr.color }} />}
       <input
@@ -314,8 +355,18 @@ function TaskRow({ task, index }: { task: Task; index: number }) {
         <span className="shrink-0 rounded-full bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-400">#{task.project}</span>
       )}
       {task.due_date && !task.done && (
-        <span className={`shrink-0 text-[11px] ${task.due_date < todayStr() ? 'text-red-400' : 'text-neutral-500'}`}>
+        <span
+          className={`flex shrink-0 items-center gap-1 text-[11px] ${
+            task.due_date < todayStr() ? 'text-red-400' : 'text-neutral-500'
+          }`}
+        >
           {parseLocal(task.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+          {task.due_time && (
+            <span className="flex items-center gap-0.5">
+              <Clock size={10} />
+              {formatTime(task.due_time)}
+            </span>
+          )}
         </span>
       )}
       <button
