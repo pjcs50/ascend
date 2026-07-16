@@ -1,13 +1,29 @@
 @import "tailwindcss";
 
+/* Root is dark, always. Without this the html/body default to white, which
+   peeks through as a white band on overscroll rubber-banding and paints the
+   window's native scrollbar/UI in its light variant. color-scheme: dark makes
+   the browser draw ALL native chrome (overlay scrollbars, form UI, autofill)
+   in dark mode. */
+:root {
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
   height: 100%;
 }
 
+html {
+  background-color: #0a0a0a;
+  /* Smooth programmatic/anchor scrolling app-wide. */
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  background-color: #0a0a0a;
 }
 
 /* Logo wordmark — elegant script, matches the "ascend" mark */
