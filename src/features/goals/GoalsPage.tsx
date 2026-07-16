@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Check } from 'lucide-react'
 import { useGoalsStore } from './goalsStore'
+import { Select } from '../../components/Select'
 import { WheelOfLife } from './WheelOfLife'
 import { GOAL_LEVELS } from './types'
 import { localDateStr } from '../../lib/date'
@@ -116,19 +117,17 @@ function GoalRow({ goal, parents }: { goal: Goal; parents: Goal[] }) {
         className={`flex-1 bg-transparent text-sm outline-none ${goal.done ? 'text-neutral-500 line-through' : 'text-neutral-200'}`}
       />
       {parents.length > 0 && (
-        <select
-          value={goal.parent_id ?? ''}
-          onChange={(e) => updateGoal(goal.id, { parent_id: e.target.value || null })}
-          className="max-w-[120px] shrink-0 rounded bg-neutral-800 px-1.5 py-0.5 text-[11px] text-neutral-400 outline-none"
-          title={parent ? `Ladders up to: ${parent.title}` : 'Link to a parent goal'}
-        >
-          <option value="">— link up —</option>
-          {parents.map((p) => (
-            <option key={p.id} value={p.id}>
-              ↑ {p.title}
-            </option>
-          ))}
-        </select>
+        <div className="shrink-0" title={parent ? `Ladders up to: ${parent.title}` : 'Link to a parent goal'}>
+          <Select
+            value={goal.parent_id ?? ''}
+            onChange={(v) => updateGoal(goal.id, { parent_id: v || null })}
+            options={[
+              { value: '', label: '— link up —' },
+              ...parents.map((p) => ({ value: p.id, label: `↑ ${p.title}` })),
+            ]}
+            className="flex max-w-[140px] items-center gap-1 rounded-lg bg-neutral-800/80 px-1.5 py-0.5 text-[11px] text-neutral-400 outline-none transition-colors hover:bg-neutral-800 hover:text-neutral-200"
+          />
+        </div>
       )}
       <button
         type="button"

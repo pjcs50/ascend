@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { motion } from 'motion/react'
 import { useHabitsStore } from './habitsStore'
+import { Select } from '../../components/Select'
 import type { Habit, HabitType, Frequency, HabitInput } from './types'
 
 const HABIT_COLORS = [
@@ -154,15 +155,16 @@ export function HabitFormDialog({ habit, onClose }: Props) {
 
         <div className="space-y-1">
           <label className="text-xs text-neutral-500">Frequency</label>
-          <select
+          <Select
             value={frequency}
-            onChange={(e) => setFrequency(e.target.value as Frequency)}
-            className={field}
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="x_per_week">X times per week</option>
-          </select>
+            onChange={(v) => setFrequency(v as Frequency)}
+            options={[
+              { value: 'daily', label: 'Daily' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'x_per_week', label: 'X times per week' },
+            ]}
+            className={`${field} flex items-center justify-between gap-1.5`}
+          />
         </div>
 
         {frequency === 'x_per_week' && (

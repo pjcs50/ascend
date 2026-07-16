@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Plus, Trash2, Compass, Quote, Lightbulb } from 'lucide-react'
 import { useCreedStore } from './creedStore'
-import { parseLocal } from '../../lib/date'
+import { DatePicker } from '../../components/DatePicker'
 import type { CreedEntry } from './types'
 
 const listSpring = { type: 'spring', stiffness: 520, damping: 40, mass: 0.7 } as const
@@ -211,21 +211,11 @@ function LessonCard({ entry, index }: { entry: CreedEntry; index: number }) {
             className="mt-1 w-full resize-none bg-transparent text-sm leading-relaxed text-neutral-400 outline-none placeholder:text-neutral-600"
           />
           <div className="mt-2 flex items-center gap-2">
-            <input
-              type="date"
-              value={entry.entry_date ?? ''}
-              onChange={(e) => update(entry.id, { entry_date: e.target.value || null })}
-              className="rounded-md bg-neutral-900/60 px-2 py-0.5 text-[11px] text-neutral-400 outline-none [color-scheme:dark]"
+            <DatePicker
+              value={entry.entry_date}
+              onChange={(v) => update(entry.id, { entry_date: v })}
+              placeholder="When it happened"
             />
-            {entry.entry_date && (
-              <span className="text-[11px] text-neutral-600">
-                {parseLocal(entry.entry_date).toLocaleDateString(undefined, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </span>
-            )}
           </div>
         </div>
         <DeleteBtn onClick={() => remove(entry.id)} />

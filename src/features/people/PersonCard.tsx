@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { usePeopleStore } from './peopleStore'
 import { EditableField } from './EditableField'
+import { DatePicker } from '../../components/DatePicker'
 import { localDateStr, parseLocal } from '../../lib/date'
 import type { Person, PersonTrait, PersonLesson } from './types'
 
@@ -87,12 +88,9 @@ function LastInteraction({ person, onSave }: { person: Person; onSave: (v: strin
   return (
     <div>
       <label className="text-[11px] uppercase tracking-wide text-neutral-500">Last meaningful interaction</label>
-      <input
-        type="date"
-        value={person.last_interaction ?? ''}
-        onChange={(e) => onSave(e.target.value || null)}
-        className="mt-1 block rounded-lg bg-neutral-900/60 px-3 py-2 text-sm text-neutral-200 outline-none ring-1 ring-transparent focus:ring-neutral-700 [color-scheme:dark]"
-      />
+      <div className="mt-1">
+        <DatePicker value={person.last_interaction} onChange={onSave} placeholder="Pick a date" />
+      </div>
     </div>
   )
 }

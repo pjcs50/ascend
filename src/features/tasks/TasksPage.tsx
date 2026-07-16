@@ -6,6 +6,8 @@ import { PRIORITY, RECURRENCE_OPTIONS } from './types'
 import { parseQuickAdd } from './parse'
 import { todayStr, parseLocal } from '../../lib/date'
 import { celebrateAt } from '../../lib/confetti'
+import { DatePicker } from '../../components/DatePicker'
+import { Select } from '../../components/Select'
 import type { Task } from './types'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -148,34 +150,20 @@ export function TasksPage() {
         />
         <QuickAddPreview title={title} />
         <div className="mt-2 flex items-center gap-2 px-1">
-          <input
-            type="date"
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-            className="rounded-lg bg-neutral-900/60 px-2 py-1 text-xs text-neutral-300 outline-none [color-scheme:dark]"
+          <DatePicker value={due || null} onChange={(v) => setDue(v ?? '')} />
+          <Select
+            value={String(priority)}
+            onChange={(v) => setPriority(Number(v))}
+            options={PRIORITY.map((p) => ({
+              value: String(p.value),
+              label: p.value === 0 ? 'No priority' : p.label,
+            }))}
           />
-          <select
-            value={priority}
-            onChange={(e) => setPriority(Number(e.target.value))}
-            className="rounded-lg bg-neutral-900/60 px-2 py-1 text-xs text-neutral-300 outline-none"
-          >
-            {PRIORITY.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.value === 0 ? 'No priority' : p.label}
-              </option>
-            ))}
-          </select>
-          <select
+          <Select
             value={recurrence}
-            onChange={(e) => setRecurrence(e.target.value)}
-            className="rounded-lg bg-neutral-900/60 px-2 py-1 text-xs text-neutral-300 outline-none"
-          >
-            {RECURRENCE_OPTIONS.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
+            onChange={setRecurrence}
+            options={RECURRENCE_OPTIONS}
+          />
           <motion.button
             type="button"
             onClick={add}
